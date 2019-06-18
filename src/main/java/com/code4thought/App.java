@@ -10,11 +10,19 @@ public class App {
     public static void main(String[] args) throws Exception {
         System.out.println("Hello World!");
 
+        //2147483647
 
-        List<SessionInfo> sessionInfos = getSessionInfos();
-        List<TalkInfo> talkInfos = getTalkInfos();
+        int a = - new Double(Math.pow(2,5)).intValue();
 
-        checkInfo(sessionInfos, talkInfos);
+        System.out.println(a);
+
+        System.out.println(Integer.toBinaryString(a));
+
+        int b = a >>> 1;
+
+        System.out.println(b);
+
+        System.out.println(Integer.toBinaryString(b));
 
 
     }
