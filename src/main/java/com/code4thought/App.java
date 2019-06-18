@@ -12,7 +12,7 @@ public class App {
 
         //2147483647
 
-        int a = - new Double(Math.pow(2,5)).intValue();
+        int a = -new Double(Math.pow(2, 5)).intValue();
 
         System.out.println(a);
 
@@ -23,6 +23,12 @@ public class App {
         System.out.println(b);
 
         System.out.println(Integer.toBinaryString(b));
+
+        String s = "1231";
+
+        if (s instanceof String) {
+            return;
+        }
 
 
     }
