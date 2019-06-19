@@ -4,7 +4,7 @@ public class TalkInfo {
 
     private String title;
 
-    private Integer minute;
+    private int minute;
 
     public TalkInfo(String title, Integer minute) {
         this.title = title;
@@ -15,15 +15,7 @@ public class TalkInfo {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public Integer getMinute() {
+    public int getMinute() {
         return minute;
-    }
-
-    public void setMinute(Integer minute) {
-        this.minute = minute;
     }
 }

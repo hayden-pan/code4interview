@@ -1,7 +1,12 @@
 package com.code4thought;
 
+import com.code4thought.combination.CombinationFactory;
+import com.code4thought.combination.CombinationItem;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Hello world!
@@ -24,11 +29,34 @@ public class App {
 
         System.out.println(Integer.toBinaryString(b));
 
-        String s = "1231";
+        CombinationItem[] combinationItems = CombinationFactory.getCombination(5, 2);
 
-        if (s instanceof String) {
-            return;
-        }
+        combinationItems = CombinationFactory.getCombination(5, 2);
+
+
+        List<Integer> list = new ArrayList<>();
+
+        list.add(1);
+        list.add(3);
+        list.add(2);
+        list.add(10);
+        list.add(5);
+        list.add(7);
+        list.add(7);
+        list.add(7);
+
+        list.sort((o1, o2) -> {
+            if (o1 < o2) {
+                return 1;
+            } else if (o1 > o2) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
+
+
+        return;
 
 
     }
@@ -75,19 +103,13 @@ public class App {
      *
      * @return 会场信息
      */
-    private static List<SessionInfo> getSessionInfos() {
-        List<SessionInfo> sessionInfos = new ArrayList<>();
-        SessionInfo morningSession = new SessionInfo();
-        morningSession.setMaxMinute(180);
-        morningSession.setMinMinute(null);
-        sessionInfos.add(morningSession);
-        sessionInfos.add(morningSession);
+    private static Map<SessionInfo, Integer> getSessionInfos() {
+        Map<SessionInfo, Integer> sessionInfos = new HashMap<>();
+        SessionInfo morningSession = new SessionInfo(180, null);
+        sessionInfos.put(morningSession, 2);
 
-        SessionInfo afternoonSession = new SessionInfo();
-        afternoonSession.setMinMinute(180);
-        afternoonSession.setMaxMinute(239);
-        sessionInfos.add(afternoonSession);
-        sessionInfos.add(afternoonSession);
+        SessionInfo afternoonSession = new SessionInfo(239, 180);
+        sessionInfos.put(afternoonSession, 2);
 
         return sessionInfos;
     }
