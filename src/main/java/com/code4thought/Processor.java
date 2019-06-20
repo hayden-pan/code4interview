@@ -22,14 +22,16 @@ public class Processor {
                 if (session.getMinMinute() != null && totalMinute < session.getMinMinute()) {
                     continue;
                 }
-                if (session.getMaxMinute() != null && totalMinute > session.getMaxMinute()) {
+                if (session.getMaxMinute() != null
+                        && (totalMinute > session.getMaxMinute()
+                        || session.getMaxMinute() - totalMinute > maxRemainMinute)) {
                     continue;
                 }
                 result.add(new TalkCombination(combinationItem.getBinaryOfM(),
                         session.getMaxMinute() - totalMinute));
             }
         }
-        return result.toArray(new TalkCombination[result.size()]);
+        return result.toArray(new TalkCombination[0]);
     }
 
     public static SingleSessionCombination[] genSingleSessionCombination(TalkCombination[] talkCombinations,
@@ -60,7 +62,7 @@ public class Processor {
                         totalRemainMinute));
             }
         }
-        return result.toArray(new SingleSessionCombination[result.size()]);
+        return result.toArray(new SingleSessionCombination[0]);
     }
 
     public static List<MultiSessionCombination> genMultiSessionCombination(
@@ -71,13 +73,11 @@ public class Processor {
         long allCombinationNum = 1;
         int[] singleSingleSessionMaxIndex = new int[singleCombinations.size()];
         int[] currentSingleSessionIndex = new int[singleCombinations.size()];
-        SessionInfo[] singleSessionKey = new SessionInfo[singleCombinations.size()];
         SingleSessionCombination[][] singleSessionValue = new SingleSessionCombination[singleCombinations.size()][];
         int index = -1;
         for (Map.Entry<SessionInfo, SingleSessionCombination[]> entry : singleCombinations.entrySet()) {
             index++;
 
-            singleSessionKey[index] = entry.getKey();
             singleSessionValue[index] = entry.getValue();
             singleSingleSessionMaxIndex[index] = entry.getValue().length - 1;
             allCombinationNum *= entry.getValue().length;
