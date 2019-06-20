@@ -3,10 +3,7 @@ package com.code4thought;
 import com.code4thought.combination.CombinationFactory;
 import com.code4thought.combination.CombinationItem;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Hello world!
@@ -15,76 +12,62 @@ public class App {
     public static void main(String[] args) throws Exception {
         System.out.println("Hello World!");
 
-        //2147483647
+        run();
+    }
 
-        int a = -new Double(Math.pow(2, 5)).intValue();
+    public static void run() throws Exception {
+        TalkInfo[] talks = getTalks();
+        long allTalksBinary = getAllTalksBinary(talks);
+        Map<SessionInfo, Integer> sessions = getSessions();
+        int maxRemainMinute = checkInfo(sessions, talks);
+        //Generate All Talk Combination For All Session
+        Map<SessionInfo, TalkCombination[]> talkCombinations = new HashMap<>();
+        for (Map.Entry<SessionInfo, Integer> entry : sessions.entrySet()) {
+            TalkCombination[] talkCombination =
+                    Processor.genTalkCombinationForSession(talks, entry.getKey(), maxRemainMinute);
+            talkCombinations.put(entry.getKey(), talkCombination);
+        }
 
-        System.out.println(a);
+        Map<SessionInfo, SingleSessionCombination[]> singleSessionCombinations = new HashMap<>();
+        for (Map.Entry<SessionInfo, TalkCombination[]> entry : talkCombinations.entrySet()) {
+            int sessionNum = sessions.get(entry.getKey());
+            SingleSessionCombination[] singleSessionCombination =
+                    Processor.genSingleSessionCombination(entry.getValue(), entry.getKey(), sessionNum, maxRemainMinute);
+            singleSessionCombinations.put(entry.getKey(), singleSessionCombination);
+        }
 
-        System.out.println(Integer.toBinaryString(a));
-
-        int b = a >>> 1;
-
-        System.out.println(b);
-
-        System.out.println(Integer.toBinaryString(b));
-
-        CombinationItem[] combinationItems = CombinationFactory.getCombination(5, 2);
-
-        combinationItems = CombinationFactory.getCombination(5, 2);
-
-
-        List<Integer> list = new ArrayList<>();
-
-        list.add(1);
-        list.add(3);
-        list.add(2);
-        list.add(10);
-        list.add(5);
-        list.add(7);
-        list.add(7);
-        list.add(7);
-
-        list.sort((o1, o2) -> {
-            if (o1 < o2) {
-                return 1;
-            } else if (o1 > o2) {
-                return -1;
-            } else {
-                return 0;
-            }
-        });
-
+        List<MultiSessionCombination> result =
+                Processor.genMultiSessionCombination(singleSessionCombinations, maxRemainMinute, allTalksBinary);
 
         return;
-
-
     }
 
     /**
      * 检查
      *
-     * @param sessionInfos
-     * @param talkInfos
+     * @param sessions
+     * @param talks
+     * @return MaxRemainMinute
      * @throws Exception 给出信息无法进行处理，错误内容
      */
-    private static void checkInfo(List<SessionInfo> sessionInfos, List<TalkInfo> talkInfos) throws Exception {
+    private static int checkInfo(Map<SessionInfo, Integer> sessions, TalkInfo[] talks) throws Exception {
 
         //if total minute large than sessions
         int totalTalkMinutes = 0;
         int totalSessionMinutes = 0;
         int maxTalkMinute = 0;
         int maxSessionMinute = 0;
-        for (TalkInfo talkInfo : talkInfos) {
+        for (TalkInfo talkInfo : talks) {
             totalTalkMinutes += talkInfo.getMinute();
             if (maxTalkMinute < talkInfo.getMinute()) {
                 maxTalkMinute = talkInfo.getMinute();
             }
         }
-        for (SessionInfo sessionInfo : sessionInfos) {
-            totalSessionMinutes += sessionInfo.getMaxMinute();
-            if (maxSessionMinute < sessionInfo.getMaxMinute()) {
-                maxSessionMinute = sessionInfo.getMaxMinute();
+
+        for (Map.Entry<SessionInfo, Integer> entry : sessions.entrySet()) {
+            totalSessionMinutes += entry.getKey().getMaxMinute() * entry.getValue();
+            if (maxSessionMinute < entry.getKey().getMaxMinute()) {
+                maxSessionMinute = entry.getKey().getMaxMinute();
             }
         }
 
@@ -96,6 +79,8 @@ public class App {
             throw new Exception("There Is A Talk Can Not Be Allocated");
         }
 
+        return totalSessionMinutes - totalTalkMinutes;
+
     }
 
     /**
@@ -103,15 +88,15 @@ public class App {
      *
      * @return 会场信息
      */
-    private static Map<SessionInfo, Integer> getSessionInfos() {
-        Map<SessionInfo, Integer> sessionInfos = new HashMap<>();
+    private static Map<SessionInfo, Integer> getSessions() {
+        Map<SessionInfo, Integer> sessions = new HashMap<>();
         SessionInfo morningSession = new SessionInfo(180, null);
-        sessionInfos.put(morningSession, 2);
+        sessions.put(morningSession, 2);
 
         SessionInfo afternoonSession = new SessionInfo(239, 180);
-        sessionInfos.put(afternoonSession, 2);
+        sessions.put(afternoonSession, 2);
 
-        return sessionInfos;
+        return sessions;
     }
 
     /**
@@ -119,29 +104,41 @@ public class App {
      *
      * @return 演讲信息
      */
-    private static List<TalkInfo> getTalkInfos() {
-        List<TalkInfo> talkInfos = new ArrayList<>();
+    private static TalkInfo[] getTalks() {
+        List<TalkInfo> talks = new ArrayList<>();
 
-        talkInfos.add(new TalkInfo("Writing Fast Tests Against Enterprise Rails", 60));
-        talkInfos.add(new TalkInfo("Overdoing it in Python", 45));
-        talkInfos.add(new TalkInfo("Lua for the Masses", 30));
-        talkInfos.add(new TalkInfo("Ruby Errors from Mismatched Gem Versions", 45));
-        talkInfos.add(new TalkInfo("Common Ruby Errors", 45));
-        talkInfos.add(new TalkInfo("Rails for Python Developers", 5));
-        talkInfos.add(new TalkInfo("Communicating Over Distance", 60));
-        talkInfos.add(new TalkInfo("Accounting-Driven Development", 45));
-        talkInfos.add(new TalkInfo("Woah", 30));
-        talkInfos.add(new TalkInfo("Sit Down and Write", 30));
-        talkInfos.add(new TalkInfo("Pair Programming vs Noise", 45));
-        talkInfos.add(new TalkInfo("Rails Magic", 60));
-        talkInfos.add(new TalkInfo("Ruby on Rails: Why We Should Move On", 60));
-        talkInfos.add(new TalkInfo("Clojure Ate Scala (on my project)", 45));
-        talkInfos.add(new TalkInfo("Programming in the Boondocks of Seattle", 30));
-        talkInfos.add(new TalkInfo("Ruby vs. Clojure for Back-End Development", 30));
-        talkInfos.add(new TalkInfo("Ruby on Rails Legacy App Maintenance", 60));
-        talkInfos.add(new TalkInfo("A World Without HackerNews", 30));
-        talkInfos.add(new TalkInfo("User Interface CSS in Rails Apps", 30));
+        talks.add(new TalkInfo("Writing Fast Tests Against Enterprise Rails", 60));
+        talks.add(new TalkInfo("Overdoing it in Python", 45));
+        talks.add(new TalkInfo("Lua for the Masses", 30));
+        talks.add(new TalkInfo("Ruby Errors from Mismatched Gem Versions", 45));
+        talks.add(new TalkInfo("Common Ruby Errors", 45));
+        talks.add(new TalkInfo("Rails for Python Developers", 5));
+        talks.add(new TalkInfo("Communicating Over Distance", 60));
+        talks.add(new TalkInfo("Accounting-Driven Development", 45));
+        talks.add(new TalkInfo("Woah", 30));
+        talks.add(new TalkInfo("Sit Down and Write", 30));
+        talks.add(new TalkInfo("Pair Programming vs Noise", 45));
+        talks.add(new TalkInfo("Rails Magic", 60));
+        talks.add(new TalkInfo("Ruby on Rails: Why We Should Move On", 60));
+        talks.add(new TalkInfo("Clojure Ate Scala (on my project)", 45));
+        talks.add(new TalkInfo("Programming in the Boondocks of Seattle", 30));
+        talks.add(new TalkInfo("Ruby vs. Clojure for Back-End Development", 30));
+        talks.add(new TalkInfo("Ruby on Rails Legacy App Maintenance", 60));
+        talks.add(new TalkInfo("A World Without HackerNews", 30));
+        talks.add(new TalkInfo("User Interface CSS in Rails Apps", 30));
 
-        return talkInfos;
+        return talks.toArray(new TalkInfo[talks.size()]);
+    }
+
+    /**
+     * @param talks
+     * @return
+     */
+    private static long getAllTalksBinary(TalkInfo[] talks) {
+        long result = 0;
+        for (int i = 0; i < talks.length; i++) {
+            result += Math.pow(2, i);
+        }
+        return result;
     }
 }

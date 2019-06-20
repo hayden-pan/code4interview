@@ -1,5 +1,6 @@
 package com.code4thought.combination;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -87,22 +88,22 @@ public class CombinationFactory {
      * @return
      */
     private static int calCombinationSize(int n, int m) {
-        long nFactorial = 1;
+        BigInteger nFactorial = BigInteger.valueOf(1);
         for (int i = 2; i < n + 1; i++) {
-            nFactorial *= i;
+            nFactorial = nFactorial.multiply(BigInteger.valueOf(i));
         }
 
-        long mFactorial = 1;
+        BigInteger mFactorial = BigInteger.valueOf(1);
         for (int i = 2; i < m + 1; i++) {
-            mFactorial *= i;
+            mFactorial = mFactorial.multiply(BigInteger.valueOf(i));
         }
 
-        long nmFactorial = 1;
+        BigInteger nmFactorial = BigInteger.valueOf(1);
         for (int i = 2; i < n - m + 1; i++) {
-            nmFactorial *= i;
+            nmFactorial = nmFactorial.multiply(BigInteger.valueOf(i));
         }
 
-        return (int) (nFactorial / mFactorial / nmFactorial);
+        return nFactorial.divide(mFactorial).divide(nmFactorial).intValue();
     }
 
 

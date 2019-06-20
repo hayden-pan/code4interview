@@ -3,14 +3,12 @@ package com.code4thought;
 import com.code4thought.combination.CombinationFactory;
 import com.code4thought.combination.CombinationItem;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class Processor {
 
-    public static List<TalkCombination> genTalkCombinationForSession(TalkInfo[] talks, SessionInfo session,
-                                                                     int maxRemainMinute) {
+    public static TalkCombination[] genTalkCombinationForSession(TalkInfo[] talks, SessionInfo session,
+                                                                 int maxRemainMinute) {
         List<TalkCombination> result = new ArrayList<>();
         int maxTalkNum = genMaxTalkNumForSession(talks, session);
         int minTalkNum = genMinTalkNumForSession(talks, session, maxRemainMinute);
@@ -22,22 +20,22 @@ public class Processor {
                     totalMinute += talks[index].getMinute();
                 }
                 if (session.getMinMinute() != null && totalMinute < session.getMinMinute()) {
-                    break;
+                    continue;
                 }
                 if (session.getMaxMinute() != null && totalMinute > session.getMaxMinute()) {
-                    break;
+                    continue;
                 }
                 result.add(new TalkCombination(combinationItem.getBinaryOfM(),
                         session.getMaxMinute() - totalMinute));
             }
         }
-        return result;
+        return result.toArray(new TalkCombination[result.size()]);
     }
 
-    public static List<SingleSessionCombination> genSingleSessionCombination(TalkCombination[] talkCombinations,
-                                                                             SessionInfo session,
-                                                                             int sessionNum,
-                                                                             int maxRemainMinute) {
+    public static SingleSessionCombination[] genSingleSessionCombination(TalkCombination[] talkCombinations,
+                                                                         SessionInfo session,
+                                                                         int sessionNum,
+                                                                         int maxRemainMinute) {
         List<SingleSessionCombination> result = new ArrayList<>();
 
         for (CombinationItem combinationItem : CombinationFactory.getCombination(talkCombinations.length, sessionNum)) {
@@ -62,11 +60,46 @@ public class Processor {
                         totalRemainMinute));
             }
         }
-        return result;
+        return result.toArray(new SingleSessionCombination[result.size()]);
     }
 
-    public static List<MultiSessionCombination> genMultiSessionCombination() {
-        return null;
+    public static List<MultiSessionCombination> genMultiSessionCombination(
+            Map<SessionInfo, SingleSessionCombination[]> singleCombinations, int maxRemainMinute, long allTalksBinary) {
+
+        List<MultiSessionCombination> result = new ArrayList<>();
+
+        long allCombinationNum = 1;
+        int[] singleSingleSessionMaxIndex = new int[singleCombinations.size()];
+        int[] currentSingleSessionIndex = new int[singleCombinations.size()];
+        SessionInfo[] singleSessionKey = new SessionInfo[singleCombinations.size()];
+        SingleSessionCombination[][] singleSessionValue = new SingleSessionCombination[singleCombinations.size()][];
+        int index = -1;
+        for (Map.Entry<SessionInfo, SingleSessionCombination[]> entry : singleCombinations.entrySet()) {
+            index++;
+
+            singleSessionKey[index] = entry.getKey();
+            singleSessionValue[index] = entry.getValue();
+            singleSingleSessionMaxIndex[index] = entry.getValue().length - 1;
+            allCombinationNum *= entry.getValue().length;
+        }
+
+        for (long i = 0; i < allCombinationNum; i++) {
+            MultiSessionCombination multiSessionCombination = genMultiSessionCombination(currentSingleSessionIndex,
+                    singleSessionValue, maxRemainMinute, allTalksBinary);
+            if (multiSessionCombination != null) {
+                result.add(multiSessionCombination);
+            }
+            for (int j = 0; j < currentSingleSessionIndex.length; j++) {
+                if (currentSingleSessionIndex[j] < singleSingleSessionMaxIndex[j]) {
+                    currentSingleSessionIndex[j]++;
+                    break;
+                } else {
+                    currentSingleSessionIndex[j] = 0;
+                }
+            }
+        }
+
+        return result;
     }
 
     private static int genMaxTalkNumForSession(TalkInfo[] talks, SessionInfo sessionInfo) {
@@ -113,6 +146,32 @@ public class Processor {
             }
         }
         return talks.length;
+    }
+
+    private static MultiSessionCombination genMultiSessionCombination(int[] currentSingleSessionIndex,
+                                                                      SingleSessionCombination[][] singleSessionValue,
+                                                                      int maxRemainMinute, long allTalksBinary) {
+
+        Map<SessionInfo, SingleSessionCombination> result = new HashMap<>();
+
+        long currentBinary = 0;
+        int totalRemainMinute = 0;
+
+        for (int i = 0; i < currentSingleSessionIndex.length; i++) {
+            SingleSessionCombination s = singleSessionValue[i][currentSingleSessionIndex[i]];
+            totalRemainMinute += s.getTotalRemainMinute();
+            if ((currentBinary & s.getBinary()) == 0 && totalRemainMinute <= maxRemainMinute) {
+                currentBinary = currentBinary | s.getBinary();
+                result.put(s.getSession(), s);
+            } else {
+                return null;
+            }
+        }
+
+        if (currentBinary != allTalksBinary) {
+            return null;
+        }
+        return new MultiSessionCombination(result);
     }
 
 }
