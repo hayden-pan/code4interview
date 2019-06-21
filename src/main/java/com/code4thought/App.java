@@ -37,7 +37,7 @@ public class App {
         }
 
         List<MultiSessionCombination> result =
-                Processor.genMultiSessionCombination(singleSessionCombinations, maxRemainMinute, allTalksBinary);
+                Processor.genMultiSessionCombination(talks, singleSessionCombinations, maxRemainMinute, allTalksBinary);
 
         return;
     }
@@ -90,10 +90,10 @@ public class App {
      */
     private static Map<SessionInfo, Integer> getSessions() {
         Map<SessionInfo, Integer> sessions = new HashMap<>();
-        SessionInfo morningSession = new SessionInfo(180, null);
+        SessionInfo morningSession = new SessionInfo("Morning", 180, null);
         sessions.put(morningSession, 2);
 
-        SessionInfo afternoonSession = new SessionInfo(239, 180);
+        SessionInfo afternoonSession = new SessionInfo("Afternoon", 239, 180);
         sessions.put(afternoonSession, 2);
 
         return sessions;

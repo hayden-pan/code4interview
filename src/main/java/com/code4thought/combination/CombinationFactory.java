@@ -14,6 +14,8 @@ public class CombinationFactory {
 
     private final static Map<CombinationBaseInfo, CombinationItem[]> cache = new HashMap<>();
 
+    private final static Map<Integer, long[]> extractCache = new HashMap<>();
+
     /**
      * 生成N选M组合项
      *
@@ -35,6 +37,18 @@ public class CombinationFactory {
         cache.put(baseInfo, items);
 
         return items;
+    }
+
+    public static synchronized long[] getBinaryExtract(int bitNum) {
+        long[] result = extractCache.get(bitNum);
+        if (result == null) {
+            result = new long[bitNum];
+            for (int i = 0; i < result.length; i++) {
+                result[i] = Double.valueOf(Math.pow(2, i)).longValue();
+            }
+            extractCache.put(bitNum, result);
+        }
+        return result;
     }
 
     private static CombinationItem[] genCombination(int n, int m) {

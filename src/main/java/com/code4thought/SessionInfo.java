@@ -2,13 +2,16 @@ package com.code4thought;
 
 public class SessionInfo {
 
+    private String title;
+
     private Integer maxMinute;
 
     private Integer minMinute;
 
     private volatile int hashCode;
 
-    public SessionInfo(Integer maxMinute, Integer minMinute) {
+    public SessionInfo(String title, Integer maxMinute, Integer minMinute) {
+        this.title = title;
         this.maxMinute = maxMinute;
         this.minMinute = minMinute;
     }
@@ -36,6 +39,10 @@ public class SessionInfo {
             hashCode = result;
         }
         return result;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public Integer getMaxMinute() {

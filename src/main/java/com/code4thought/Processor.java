@@ -39,34 +39,15 @@ public class Processor {
                                                                          int sessionNum,
                                                                          int maxRemainMinute) {
         List<SingleSessionCombination> result = new ArrayList<>();
-
-        for (CombinationItem combinationItem : CombinationFactory.getCombination(talkCombinations.length, sessionNum)) {
-            long resultBinary = 0;
-            int totalRemainMinute = 0;
-            TalkCombination[] innerTalkCombinations = new TalkCombination[sessionNum];
-            int index = 0;
-            for (int i : combinationItem.getIndexOfM()) {
-                long tmpBinary = resultBinary & talkCombinations[i].getBinary(); //组合冲突计算
-                int tmpTotalRemainMinute = totalRemainMinute + talkCombinations[i].getRemainMinute();//组合剩余时间计算
-                if (tmpBinary == 0 && tmpTotalRemainMinute <= maxRemainMinute) {
-                    resultBinary = resultBinary | talkCombinations[i].getBinary();
-                    totalRemainMinute = tmpTotalRemainMinute;
-                    innerTalkCombinations[index] = talkCombinations[i];
-                    index++;
-                } else {
-                    break;
-                }
-            }
-            if (index == sessionNum) {
-                result.add(new SingleSessionCombination(session, innerTalkCombinations, resultBinary,
-                        totalRemainMinute));
-            }
-        }
+        int[] check = new int[sessionNum];
+        genSingleSessionRecursive(session, result, talkCombinations, 0, sessionNum, check, 0,
+                maxRemainMinute);
         return result.toArray(new SingleSessionCombination[0]);
     }
 
     public static List<MultiSessionCombination> genMultiSessionCombination(
-            Map<SessionInfo, SingleSessionCombination[]> singleCombinations, int maxRemainMinute, long allTalksBinary) {
+            TalkInfo[] talks, Map<SessionInfo, SingleSessionCombination[]> singleCombinations,
+            int maxRemainMinute, long allTalksBinary) {
 
         List<MultiSessionCombination> result = new ArrayList<>();
 
@@ -88,6 +69,7 @@ public class Processor {
                     singleSessionValue, maxRemainMinute, allTalksBinary);
             if (multiSessionCombination != null) {
                 result.add(multiSessionCombination);
+                //printResult(talks, multiSessionCombination);
             }
             for (int j = 0; j < currentSingleSessionIndex.length; j++) {
                 if (currentSingleSessionIndex[j] < singleSingleSessionMaxIndex[j]) {
@@ -148,6 +130,46 @@ public class Processor {
         return talks.length;
     }
 
+
+    private static void genSingleSessionRecursive(SessionInfo session, List<SingleSessionCombination> result,
+                                                  TalkCombination[] talkCombinations, int startIndex, int num,
+                                                  int[] check, int checkIndex, int maxRemainMinute) {
+
+        if (num > 1) {
+            for (int i = startIndex; i < talkCombinations.length - num + 1; i++) {
+                check[checkIndex] = i;
+                genSingleSessionRecursive(session, result, talkCombinations, i + 1, num - 1, check,
+                        checkIndex + 1, maxRemainMinute);
+            }
+        } else {
+            for (int i = startIndex; i < talkCombinations.length; i++) {
+                check[checkIndex] = i;
+
+                long resultBinary = 0;
+                int totalRemainMinute = 0;
+                TalkCombination[] innerTalkCombinations = new TalkCombination[check.length];
+                int index = 0;
+                for (int j : check) {
+                    long tmpBinary = resultBinary & talkCombinations[j].getBinary();//组合冲突计算
+                    totalRemainMinute += talkCombinations[j].getRemainMinute();//组合剩余时间计算
+                    if (tmpBinary == 0 && totalRemainMinute <= maxRemainMinute) {
+                        resultBinary |= talkCombinations[j].getBinary();
+                        innerTalkCombinations[index] = talkCombinations[j];
+                        index++;
+                    } else {
+                        break;
+                    }
+                }
+                if (index == check.length) {
+                    result.add(new SingleSessionCombination(session, innerTalkCombinations, resultBinary,
+                            totalRemainMinute));
+                }
+            }
+        }
+
+
+    }
+
     private static MultiSessionCombination genMultiSessionCombination(int[] currentSingleSessionIndex,
                                                                       SingleSessionCombination[][] singleSessionValue,
                                                                       int maxRemainMinute, long allTalksBinary) {
@@ -172,6 +194,28 @@ public class Processor {
             return null;
         }
         return new MultiSessionCombination(result);
+    }
+
+    private static void printResult(TalkInfo[] talks, MultiSessionCombination combination) {
+
+        System.out.println("=========================================");
+
+        for (Map.Entry<SessionInfo, SingleSessionCombination> entry : combination.getResult().entrySet()) {
+            System.out.println("[" + entry.getKey().getTitle() + "]");
+            System.out.println(Long.toBinaryString(entry.getValue().getBinary()));
+            for (TalkCombination talkCombination : entry.getValue().getTalkCombinations()) {
+                long[] extractBinary = CombinationFactory.getBinaryExtract(talks.length);
+                for (int i = 0; i < extractBinary.length; i++) {
+                    if ((talkCombination.getBinary() & extractBinary[i]) == extractBinary[i]) {
+                        System.out.println(talks[i].getTitle() + "  " + talks[i].getMinute() + "min");
+                    }
+                }
+                System.out.println("RemainMin: " + talkCombination.getRemainMinute() + "min");
+                System.out.println("````````````````````````````````````````````````");
+            }
+            System.out.println("---------------------------------------------------");
+        }
+
     }
 
 }
